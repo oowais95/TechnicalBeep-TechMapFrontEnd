@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 .tem-app {
-  @apply bg-slate-100 text-slate-900 antialiased;
+  @apply min-h-screen text-slate-900 antialiased;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: linear-gradient(165deg, #f8fafc 0%, #eef2ff 42%, #f5f3ff 72%, #faf5ff 100%);
 }
 
 .tem-app .leaflet-container {
@@ -13,6 +14,21 @@
 
 @layer components {
   .input {
-    @apply w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100;
+    @apply w-full rounded-lg border border-indigo-200/80 bg-white/90 px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100;
+  }
+}
+
+.featured-marquee-outer {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .featured-marquee-track {
+    animation: none !important;
+  }
+
+  .featured-marquee-outer {
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 }

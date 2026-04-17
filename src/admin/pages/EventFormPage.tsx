@@ -21,7 +21,7 @@ export const EventFormPage = () => {
     setIsLoading(true)
     setError(null)
     try {
-      const events = (await getEvents()) as TechEvent[]
+      const events = (await getEvents({ listAll: true })) as TechEvent[]
       const found = events.find((event) => event.id === eventId)
       if (!found) {
         throw new Error('Event not found.')

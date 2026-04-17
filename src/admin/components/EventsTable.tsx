@@ -3,18 +3,26 @@ import type { TechEvent } from '../../types/event'
 
 interface EventsTableProps {
   events: TechEvent[]
+  /** Total events before client-side search filter (for empty-state copy). */
+  totalBeforeSearch?: number
   isLoading: boolean
   onEdit: (eventId: string) => void
   onDelete: (eventId: string) => void
 }
 
-export const EventsTable = ({ events, isLoading, onEdit, onDelete }: EventsTableProps) => {
+export const EventsTable = ({ events, totalBeforeSearch, isLoading, onEdit, onDelete }: EventsTableProps) => {
   if (isLoading) {
     return <div className="rounded-xl bg-white p-6 shadow-card">Loading events...</div>
   }
 
   if (events.length === 0) {
-    return <div className="rounded-xl bg-white p-6 shadow-card">No events found.</div>
+    const hasRowsButFilteredOut =
+      typeof totalBeforeSearch === 'number' && totalBeforeSearch > 0
+    return (
+      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-6 text-center text-sm text-slate-600 shadow-card">
+        {hasRowsButFilteredOut ? 'No events match your search. Try another term.' : 'No events found.'}
+      </div>
+    )
   }
 
   return (

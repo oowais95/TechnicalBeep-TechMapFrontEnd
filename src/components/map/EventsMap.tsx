@@ -27,7 +27,7 @@ const EventsMapComponent = ({ events, activeEventId, center }: EventsMapProps) =
   }, [activeEventId])
 
   return (
-    <div className="h-[420px] overflow-hidden rounded-xl shadow-card transition duration-300 lg:h-full">
+    <div className="h-[420px] overflow-hidden rounded-2xl border border-indigo-100/90 bg-white/50 shadow-card ring-1 ring-indigo-100/40 transition duration-300 lg:h-full">
       <MapContainer center={center} zoom={MAP_CONFIG.defaultZoom} scrollWheelZoom className="z-0">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -52,8 +52,8 @@ const EventsMapComponent = ({ events, activeEventId, center }: EventsMapProps) =
             >
               <Popup>
                 <div className="max-w-60">
-                  <h3 className="text-sm font-semibold">{event.title}</h3>
-                  <p className="mt-1 text-xs text-slate-600">
+                  <h3 className="text-sm font-semibold text-slate-900">{event.title}</h3>
+                  <p className="mt-1 text-xs text-indigo-700/90">
                     {format(new Date(event.dateTime), 'PPP p')}
                   </p>
                   <p className="text-xs text-slate-600">
@@ -61,7 +61,7 @@ const EventsMapComponent = ({ events, activeEventId, center }: EventsMapProps) =
                   </p>
                   <p className="mt-2 text-xs text-slate-700">{event.description}</p>
                   <a
-                    className="mt-2 inline-block text-xs font-semibold text-blue-600 underline"
+                    className="mt-2 inline-block text-xs font-semibold text-violet-600 underline decoration-violet-300 underline-offset-2 hover:text-indigo-700"
                     href={event.externalUrl}
                     target="_blank"
                     rel="noreferrer"

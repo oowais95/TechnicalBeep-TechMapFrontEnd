@@ -1,9 +1,40 @@
 import { ENV } from '../config/env'
 import { mockEvents } from '../data/mockEvents'
+import { isUpcomingPublishedMapEvent } from '../utils/eventFilters'
 
 const RETRY_ATTEMPTS = 3
 const RETRY_DELAY_MS = 500
-let localEvents = [...mockEvents]
+const MOCK_STORAGE_KEY = 'tem_mock_events_v1'
+
+const loadLocalEventsFromStorage = () => {
+  if (typeof sessionStorage === 'undefined') {
+    return null
+  }
+  try {
+    const raw = sessionStorage.getItem(MOCK_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+let localEvents = loadLocalEventsFromStorage() ?? [...mockEvents]
+
+const persistMockEvents = () => {
+  if (typeof sessionStorage === 'undefined') {
+    return
+  }
+  try {
+    sessionStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(localEvents))
+  } catch {
+    /* ignore quota / private mode */
+  }
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('tem:events-changed'))
+  }
+}
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -62,15 +93,19 @@ const fetchWithRetry = async (url, options = {}) => {
   throw lastError instanceof Error ? lastError : new Error('Request failed after retries.')
 }
 
-export const getEvents = ({ search, category } = {}) => {
+export const getEvents = ({ search, category, listAll = false } = {}) => {
   if (ENV.useMockApi) {
+    const base = listAll
+      ? [...localEvents]
+      : localEvents.filter((event) => isUpcomingPublishedMapEvent(event))
     const normalizedSearch = (search ?? '').trim().toLowerCase()
     return Promise.resolve(
-      localEvents.filter((event) => {
+      base.filter((event) => {
         const searchMatch =
           !normalizedSearch ||
           event.title.toLowerCase().includes(normalizedSearch) ||
-          event.city.toLowerCase().includes(normalizedSearch)
+          event.city.toLowerCase().includes(normalizedSearch) ||
+          (event.venue && event.venue.toLowerCase().includes(normalizedSearch))
         const categoryMatch = !category || category === 'All' || event.category === category
         return searchMatch && categoryMatch
       }),
@@ -78,13 +113,19 @@ export const getEvents = ({ search, category } = {}) => {
   }
 
   const categoryParam = category && category !== 'All' ? category : undefined
-  const url = buildUrl('/events', { q: search, category: categoryParam })
+  const url = buildUrl('/events', {
+    q: search,
+    category: categoryParam,
+    ...(listAll ? { listAll: 'true' } : {}),
+  })
   return fetchWithRetry(url)
 }
 
 export const getFeaturedEvents = () => {
   if (ENV.useMockApi) {
-    return Promise.resolve(localEvents.filter((event) => event.featured))
+    return Promise.resolve(
+      localEvents.filter((event) => event.featured && isUpcomingPublishedMapEvent(event)),
+    )
   }
 
   const url = buildUrl('/events/featured')
@@ -95,6 +136,7 @@ export const createEvent = (payload) => {
   if (ENV.useMockApi) {
     const created = { ...payload, id: `evt-${Date.now()}` }
     localEvents = [created, ...localEvents]
+    persistMockEvents()
     return Promise.resolve(created)
   }
 
@@ -113,6 +155,7 @@ export const updateEvent = (id, payload) => {
     if (!updated) {
       return Promise.reject(new Error('Event not found.'))
     }
+    persistMockEvents()
     return Promise.resolve(updated)
   }
 
@@ -127,6 +170,7 @@ export const updateEvent = (id, payload) => {
 export const deleteEvent = (id) => {
   if (ENV.useMockApi) {
     localEvents = localEvents.filter((event) => event.id !== id)
+    persistMockEvents()
     return Promise.resolve({ success: true })
   }
 

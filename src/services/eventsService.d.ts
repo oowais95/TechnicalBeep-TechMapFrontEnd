@@ -3,6 +3,8 @@ import type { EventCategory, TechEvent } from '../types/event'
 export function getEvents(params?: {
   search?: string
   category?: EventCategory | 'All'
+  /** Admin dashboard: include drafts / past / hidden-from-map items (mock + optional API query). */
+  listAll?: boolean
 }): Promise<TechEvent[]>
 
 export function getFeaturedEvents(): Promise<TechEvent[]>

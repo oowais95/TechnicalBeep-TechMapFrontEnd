@@ -50,5 +50,24 @@ export const useEventsData = ({ searchQuery, categoryFilter }: UseEventsDataPara
     void refetch()
   }, [refetch])
 
+  useEffect(() => {
+    const onEventsChanged = () => {
+      void refetch()
+    }
+    window.addEventListener('tem:events-changed', onEventsChanged)
+    return () => window.removeEventListener('tem:events-changed', onEventsChanged)
+  }, [refetch])
+
+  useEffect(() => {
+    const MOCK_KEY = 'tem_mock_events_v1'
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === MOCK_KEY) {
+        void refetch()
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [refetch])
+
   return { events, featuredEvents, isLoading, error, refetch }
 }
