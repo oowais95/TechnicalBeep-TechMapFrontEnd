@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react'
-import { format } from 'date-fns'
 import type { TechEvent } from '../types/event'
+import { formatEventDateDisplay } from '../utils/formatEventDate'
 
 interface FeaturedEventsCarouselProps {
   events: TechEvent[]
@@ -56,7 +56,7 @@ const FeaturedEventsCarouselComponent = ({ events, onEventClick }: FeaturedEvent
             >
               <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">{event.category}</p>
               <h3 className="mt-1 text-base font-semibold text-slate-900">{event.title}</h3>
-              <p className="mt-2 text-xs text-slate-600">{format(new Date(event.dateTime), 'PPP p')}</p>
+              <p className="mt-2 text-xs text-slate-600">{formatEventDateDisplay(event.dateTime)}</p>
               <p className="mt-1 text-xs text-slate-500">
                 {event.venue}, {event.city}
               </p>

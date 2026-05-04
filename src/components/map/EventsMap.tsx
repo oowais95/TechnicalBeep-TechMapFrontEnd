@@ -2,9 +2,9 @@ import { memo, useEffect, useMemo, useRef } from 'react'
 import type { Marker as LeafletMarker } from 'leaflet'
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
-import { format } from 'date-fns'
 import { MAP_CONFIG } from '../../config/map'
 import type { TechEvent } from '../../types/event'
+import { formatEventDateDisplay } from '../../utils/formatEventDate'
 
 interface EventsMapProps {
   events: TechEvent[]
@@ -12,11 +12,22 @@ interface EventsMapProps {
   center: [number, number]
 }
 
+const hasValidMapCoordinates = (event: TechEvent): boolean => {
+  const c = event.coordinates
+  return (
+    Array.isArray(c) &&
+    c.length === 2 &&
+    Number.isFinite(c[0]) &&
+    Number.isFinite(c[1])
+  )
+}
+
 const EventsMapComponent = ({ events, activeEventId, center }: EventsMapProps) => {
+  const mapEvents = useMemo(() => events.filter(hasValidMapCoordinates), [events])
   const markerRefs = useRef<Record<string, LeafletMarker | null>>({})
   const activeEvent = useMemo(
-    () => events.find((event) => event.id === activeEventId) ?? null,
-    [events, activeEventId],
+    () => mapEvents.find((event) => event.id === activeEventId) ?? null,
+    [mapEvents, activeEventId],
   )
 
   useEffect(() => {
@@ -42,7 +53,7 @@ const EventsMapComponent = ({ events, activeEventId, center }: EventsMapProps) =
         )}
 
         <MarkerClusterGroup chunkedLoading>
-          {events.map((event) => (
+          {mapEvents.map((event) => (
             <Marker
               key={event.id}
               position={event.coordinates}
@@ -54,7 +65,7 @@ const EventsMapComponent = ({ events, activeEventId, center }: EventsMapProps) =
                 <div className="max-w-60">
                   <h3 className="text-sm font-semibold text-slate-900">{event.title}</h3>
                   <p className="mt-1 text-xs text-indigo-700/90">
-                    {format(new Date(event.dateTime), 'PPP p')}
+                    {formatEventDateDisplay(event.dateTime)}
                   </p>
                   <p className="text-xs text-slate-600">
                     {event.venue}, {event.city}

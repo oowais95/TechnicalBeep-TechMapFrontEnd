@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
+import { ENV } from '../config/env'
 import { getEvents, getFeaturedEvents } from '../services/eventsService.js'
+import { filterEvents, isUpcomingPublishedMapEvent } from '../utils/eventFilters'
 import type { EventCategory, TechEvent } from '../types/event'
 
 interface EventsDataState {
@@ -26,13 +28,20 @@ export const useEventsData = ({ searchQuery, categoryFilter }: UseEventsDataPara
     setError(null)
 
     try {
-      const [eventsPayload, featuredPayload] = await Promise.all([
-        getEvents({ search: searchQuery, category: categoryFilter }),
-        getFeaturedEvents(),
-      ])
-
-      setEvents(eventsPayload as TechEvent[])
-      setFeaturedEvents(featuredPayload as TechEvent[])
+      if (ENV.useMockApi) {
+        const [eventsPayload, featuredPayload] = await Promise.all([
+          getEvents({ search: searchQuery, category: categoryFilter }),
+          getFeaturedEvents(),
+        ])
+        setEvents(eventsPayload as TechEvent[])
+        setFeaturedEvents(featuredPayload as TechEvent[])
+      } else {
+        const raw = (await getEvents({ search: searchQuery, category: categoryFilter })) as TechEvent[]
+        const featuredPayload = raw.filter((e) => e.featured && isUpcomingPublishedMapEvent(e))
+        const eventsPayload = filterEvents(raw, searchQuery, categoryFilter)
+        setEvents(eventsPayload)
+        setFeaturedEvents(featuredPayload)
+      }
     } catch (unknownError) {
       const message =
         unknownError instanceof Error

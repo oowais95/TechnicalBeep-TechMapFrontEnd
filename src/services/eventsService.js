@@ -38,12 +38,73 @@ const persistMockEvents = () => {
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
+const trimSlash = (value) => value.replace(/\/+$/, '')
+
+const parsePositiveInt = (raw, fallback) => {
+  const n = Number.parseInt(String(raw ?? ''), 10)
+  return Number.isFinite(n) && n > 0 ? n : fallback
+}
+
+/** Spring Data REST style page object, or a plain array. */
+const normalizeEventsPayload = (data) => {
+  if (Array.isArray(data)) {
+    return data
+  }
+  if (data && Array.isArray(data.content)) {
+    return data.content
+  }
+  if (data && Array.isArray(data.data)) {
+    return data.data
+  }
+  return []
+}
+
+/** API expects latitude/longitude; UI uses coordinates [lat, lng]. */
+const eventPayloadToApiBody = (payload) => {
+  const [lat, lng] = payload.coordinates ?? []
+  return {
+    title: payload.title,
+    description: payload.description,
+    dateTime: payload.dateTime,
+    venue: payload.venue,
+    city: payload.city,
+    latitude: lat,
+    longitude: lng,
+    category: payload.category,
+    featured: payload.featured,
+    published: payload.published,
+    showOnMap: payload.showOnMap,
+    externalUrl: payload.externalUrl,
+  }
+}
+
+const mapEventFromApi = (row) => {
+  if (!row || typeof row !== 'object') {
+    return row
+  }
+  const lat = row.latitude
+  const lng = row.longitude
+  if (Array.isArray(row.coordinates) && row.coordinates.length >= 2) {
+    return {
+      ...row,
+      coordinates: [Number(row.coordinates[0]), Number(row.coordinates[1])],
+    }
+  }
+  if (lat != null && lng != null && Number.isFinite(Number(lat)) && Number.isFinite(Number(lng))) {
+    return { ...row, coordinates: [Number(lat), Number(lng)] }
+  }
+  return row
+}
+
 const buildUrl = (path, query = {}) => {
   if (!ENV.apiBaseUrl && !ENV.useMockApi) {
     throw new Error('VITE_API_BASE_URL is not set. Please configure your API base URL.')
   }
 
-  const url = new URL(`${ENV.apiBaseUrl}${path}`)
+  const joined = `${trimSlash(ENV.apiBaseUrl)}${path}`
+  const originFallback =
+    typeof window !== 'undefined' && window.location?.origin ? window.location.origin : 'http://localhost:5173'
+  const url = /^https?:\/\//i.test(joined) ? new URL(joined) : new URL(joined, originFallback)
 
   Object.entries(query).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') {
@@ -55,6 +116,35 @@ const buildUrl = (path, query = {}) => {
   return url.toString()
 }
 
+const messageFromErrorBody = (body) => {
+  if (!body || typeof body !== 'object') {
+    return null
+  }
+  if (typeof body.message === 'string' && body.message.trim()) {
+    return body.message.trim()
+  }
+  if (typeof body.detail === 'string' && body.detail.trim()) {
+    return body.detail.trim()
+  }
+  if (typeof body.error === 'string' && body.error.trim()) {
+    return body.error.trim()
+  }
+  if (Array.isArray(body.errors) && body.errors.length > 0) {
+    const parts = body.errors
+      .map((e) => (e && (e.defaultMessage || e.message)) || '')
+      .filter(Boolean)
+    if (parts.length) return parts.join('; ')
+  }
+  if (body.errors && typeof body.errors === 'object' && !Array.isArray(body.errors)) {
+    const parts = Object.entries(body.errors).map(([k, v]) => {
+      const val = Array.isArray(v) ? v.join(', ') : String(v)
+      return `${k}: ${val}`
+    })
+    if (parts.length) return parts.join('; ')
+  }
+  return null
+}
+
 const fetchWithRetry = async (url, options = {}) => {
   let lastError = null
 
@@ -64,8 +154,23 @@ const fetchWithRetry = async (url, options = {}) => {
 
       if (!response.ok) {
         const retryable = response.status >= 500
+        let message = `Request failed with status ${response.status}${response.statusText ? ` (${response.statusText})` : ''}`
+        try {
+          const ct = response.headers.get('content-type') ?? ''
+          const rawText = await response.text()
+          if (ct.includes('application/json') && rawText) {
+            const body = JSON.parse(rawText)
+            const parsed = messageFromErrorBody(body)
+            if (parsed) message = `${message}. ${parsed}`
+            else message = `${message}. ${rawText}`
+          } else if (rawText) {
+            message = `${message}. ${rawText}`
+          }
+        } catch {
+          /* ignore non-JSON error bodies */
+        }
         if (!retryable || attempt === RETRY_ATTEMPTS) {
-          throw new Error(`Request failed with status ${response.status}`)
+          throw new Error(message)
         }
         await wait(RETRY_DELAY_MS * attempt)
         continue
@@ -112,13 +217,15 @@ export const getEvents = ({ search, category, listAll = false } = {}) => {
     )
   }
 
-  const categoryParam = category && category !== 'All' ? category : undefined
+  const mapPageSize = parsePositiveInt(import.meta.env.VITE_EVENTS_PAGE_SIZE, 20)
+  const adminPageSize = parsePositiveInt(import.meta.env.VITE_ADMIN_EVENTS_PAGE_SIZE, 500)
+
   const url = buildUrl('/events', {
-    q: search,
-    category: categoryParam,
-    ...(listAll ? { listAll: 'true' } : {}),
+    page: 0,
+    size: listAll ? adminPageSize : mapPageSize,
+    sort: 'dateTime,asc',
   })
-  return fetchWithRetry(url)
+  return fetchWithRetry(url).then((data) => normalizeEventsPayload(data).map(mapEventFromApi))
 }
 
 export const getFeaturedEvents = () => {
@@ -128,8 +235,9 @@ export const getFeaturedEvents = () => {
     )
   }
 
-  const url = buildUrl('/events/featured')
-  return fetchWithRetry(url)
+  return getEvents({}).then((rows) =>
+    rows.filter((event) => event.featured && isUpcomingPublishedMapEvent(event)),
+  )
 }
 
 export const createEvent = (payload) => {
@@ -144,8 +252,8 @@ export const createEvent = (payload) => {
   return fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
+    body: JSON.stringify(eventPayloadToApiBody(payload)),
+  }).then(mapEventFromApi)
 }
 
 export const updateEvent = (id, payload) => {
@@ -163,8 +271,8 @@ export const updateEvent = (id, payload) => {
   return fetchWithRetry(url, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
+    body: JSON.stringify(eventPayloadToApiBody(payload)),
+  }).then(mapEventFromApi)
 }
 
 export const deleteEvent = (id) => {

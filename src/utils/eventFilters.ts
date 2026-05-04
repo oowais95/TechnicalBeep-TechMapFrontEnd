@@ -1,8 +1,14 @@
-import { isAfter, parseISO } from 'date-fns'
+import { isAfter, isValid, parseISO } from 'date-fns'
 import type { EventCategory, TechEvent } from '../types/event'
 
 export const isUpcomingPublishedMapEvent = (event: TechEvent): boolean => {
-  const eventDate = parseISO(event.dateTime)
+  if (event.dateTime == null || event.dateTime === '') {
+    return false
+  }
+  const eventDate = parseISO(String(event.dateTime))
+  if (!isValid(eventDate)) {
+    return false
+  }
   return (
     event.published &&
     event.showOnMap &&
@@ -18,10 +24,10 @@ export const filterEvents = (
   const normalizedQuery = searchQuery.trim().toLowerCase()
 
   return events.filter((event) => {
+    const title = (event.title ?? '').toLowerCase()
+    const city = (event.city ?? '').toLowerCase()
     const searchMatch =
-      normalizedQuery.length === 0 ||
-      event.title.toLowerCase().includes(normalizedQuery) ||
-      event.city.toLowerCase().includes(normalizedQuery)
+      normalizedQuery.length === 0 || title.includes(normalizedQuery) || city.includes(normalizedQuery)
 
     const categoryMatch = category === 'All' || event.category === category
 

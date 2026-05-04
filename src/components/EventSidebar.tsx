@@ -1,6 +1,6 @@
 import { memo, useMemo, useState } from 'react'
-import { format } from 'date-fns'
 import type { TechEvent } from '../types/event'
+import { formatEventDateDisplay } from '../utils/formatEventDate'
 
 interface EventSidebarProps {
   events: TechEvent[]
@@ -11,13 +11,13 @@ interface EventSidebarProps {
 const filterEventsForList = (items: TechEvent[], query: string): TechEvent[] => {
   const q = query.trim().toLowerCase()
   if (!q) return items
-  return items.filter(
-    (event) =>
-      event.title.toLowerCase().includes(q) ||
-      event.city.toLowerCase().includes(q) ||
-      event.venue.toLowerCase().includes(q) ||
-      event.category.toLowerCase().includes(q),
-  )
+  return items.filter((event) => {
+    const title = (event.title ?? '').toLowerCase()
+    const city = (event.city ?? '').toLowerCase()
+    const venue = (event.venue ?? '').toLowerCase()
+    const cat = (event.category ?? '').toLowerCase()
+    return title.includes(q) || city.includes(q) || venue.includes(q) || cat.includes(q)
+  })
 }
 
 const EventSidebarComponent = ({ events, activeEventId, onEventSelect }: EventSidebarProps) => {
@@ -92,7 +92,7 @@ const EventSidebarComponent = ({ events, activeEventId, onEventSelect }: EventSi
                   {event.category}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-slate-600">{format(new Date(event.dateTime), 'PPP p')}</p>
+              <p className="mt-1 text-xs text-slate-600">{formatEventDateDisplay(event.dateTime)}</p>
               <p className="mt-1 text-xs text-slate-500">
                 {event.venue}, {event.city}
               </p>

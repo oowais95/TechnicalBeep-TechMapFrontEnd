@@ -1,5 +1,5 @@
-import { format } from 'date-fns'
 import type { TechEvent } from '../../types/event'
+import { formatEventDateDisplay } from '../../utils/formatEventDate'
 
 interface EventsTableProps {
   events: TechEvent[]
@@ -45,7 +45,7 @@ export const EventsTable = ({ events, totalBeforeSearch, isLoading, onEdit, onDe
                   <p className="font-semibold text-slate-900">{event.title}</p>
                   <p className="text-xs text-slate-500">{event.category}</p>
                 </td>
-                <td className="px-4 py-3 text-slate-600">{format(new Date(event.dateTime), 'PPP p')}</td>
+                <td className="px-4 py-3 text-slate-600">{formatEventDateDisplay(event.dateTime)}</td>
                 <td className="px-4 py-3 text-slate-600">
                   {event.venue}, {event.city}
                 </td>

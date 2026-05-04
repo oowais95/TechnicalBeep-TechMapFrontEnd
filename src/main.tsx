@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import 'leaflet/dist/leaflet.css'
 import { AppRouter } from './routes/AppRouter.tsx'
+import { RootErrorBoundary } from './components/RootErrorBoundary.tsx'
 import { initializeLeafletIcons } from './utils/leafletIcon.ts'
 import { AuthProvider } from './auth/AuthProvider.tsx'
 
@@ -11,10 +12,12 @@ initializeLeafletIcons()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRouter />
-      </AuthProvider>
-    </BrowserRouter>
+    <RootErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRouter />
+        </AuthProvider>
+      </BrowserRouter>
+    </RootErrorBoundary>
   </StrictMode>,
 )
