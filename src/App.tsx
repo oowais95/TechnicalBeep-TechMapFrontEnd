@@ -54,19 +54,19 @@ function App() {
 
   return (
     <main className="tem-app mx-auto flex min-h-screen w-full max-w-[1600px] flex-col gap-4 p-4 lg:gap-5 lg:p-6">
-      <header className="relative overflow-hidden rounded-2xl border border-indigo-100/80 bg-gradient-to-br from-white via-indigo-50/50 to-violet-50/80 p-5 shadow-card sm:p-6">
+      <header className="tem-surface relative overflow-hidden rounded-3xl p-5 sm:p-6">
         <div
-          className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-violet-400/20 blur-3xl"
+          className="pointer-events-none absolute -right-20 -top-20 h-44 w-44 rounded-full bg-indigo-500/20 blur-3xl"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-indigo-400/15 blur-2xl"
+          className="pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-fuchsia-400/15 blur-3xl"
           aria-hidden
         />
-        <p className="relative text-xs font-semibold uppercase tracking-widest text-indigo-600/90">
+        <p className="relative text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700/90">
           Live discovery
         </p>
-        <h1 className="relative mt-1 bg-gradient-to-r from-indigo-700 via-violet-600 to-fuchsia-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent sm:text-3xl">
+        <h1 className="relative mt-1 bg-gradient-to-r from-slate-900 via-indigo-700 to-violet-700 bg-clip-text text-2xl font-bold tracking-tight text-transparent sm:text-3xl">
           Tech Events Map
         </h1>
         <p className="relative mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
@@ -76,7 +76,7 @@ function App() {
 
       <Suspense
         fallback={
-          <div className="h-36 animate-pulse rounded-2xl bg-gradient-to-r from-indigo-100 via-violet-100 to-fuchsia-100/80" />
+          <div className="tem-surface h-36 animate-pulse rounded-3xl bg-gradient-to-r from-white/80 via-indigo-50/80 to-fuchsia-50/70" />
         }
       >
         <FeaturedEventsCarousel events={featuredEvents} onEventClick={setSelectedEventId} />
@@ -93,14 +93,14 @@ function App() {
       <section className="grid flex-1 gap-4 lg:grid-cols-[1.7fr_1fr]">
         <Suspense
           fallback={
-            <div className="h-[420px] animate-pulse rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100 lg:h-full" />
+            <div className="tem-surface h-[420px] animate-pulse rounded-3xl bg-gradient-to-br from-white/80 to-indigo-50/70 lg:h-full" />
           }
         >
           <EventsMap events={events} activeEventId={selectedEventId} center={center} />
         </Suspense>
         <Suspense
           fallback={
-            <div className="h-[420px] animate-pulse rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100/90 lg:h-full" />
+            <div className="tem-surface h-[420px] animate-pulse rounded-3xl bg-gradient-to-br from-white/75 to-violet-50/80 lg:h-full" />
           }
         >
           <EventSidebar
