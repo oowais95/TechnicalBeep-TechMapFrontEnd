@@ -29,7 +29,7 @@ export const LoadingSkeleton = ({ hasFeatured = false }: LoadingSkeletonProps) =
 
     {hasFeatured ? (
       <div
-        className="fixed inset-x-0 bottom-0 z-30 animate-pulse border-t border-warm-border bg-cream-dark/80"
+        className="fixed inset-x-0 bottom-0 z-30 animate-pulse border-t border-warm-border bg-white/90"
         style={{ height: 'var(--featured-bar-height)' }}
       />
     ) : null}

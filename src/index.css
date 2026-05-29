@@ -21,7 +21,7 @@
     --ring: 30 18% 14%;
     --radius: 0.5rem;
     --app-header-height: 3.5rem;
-    --featured-bar-height: 6.75rem;
+    --featured-bar-height: 11.5rem;
   }
 
   * {
@@ -48,9 +48,10 @@
   font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
 }
 
-.tem-app .leaflet-container {
-  @apply h-full w-full;
-  background: #e8e4dc;
+.tem-map,
+.tem-map .leaflet-container {
+  @apply h-full w-full border-0;
+  background: #f2f2f2;
 }
 
 .tem-app .leaflet-popup-content-wrapper {
@@ -59,6 +60,97 @@
 
 .tem-app .leaflet-popup-tip {
   @apply bg-white;
+}
+
+/* Cluster markers — indigo circle, glow, count + "events" label */
+.tem-cluster-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.tem-cluster-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.tem-cluster-marker__circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background: #5b3df5;
+  box-shadow:
+    0 0 0 6px rgba(91, 61, 245, 0.22),
+    0 0 20px rgba(91, 61, 245, 0.45),
+    0 4px 12px rgba(91, 61, 245, 0.35);
+}
+
+.tem-cluster-marker__count {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+}
+
+.tem-cluster-marker__label {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(26, 20, 16, 0.35);
+}
+
+/* Zoom control — rounded white box, top-right */
+.tem-app .leaflet-top.leaflet-right {
+  top: 12px;
+  right: 12px;
+}
+
+.tem-app .leaflet-control-zoom {
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 4px 16px rgba(15, 23, 42, 0.08);
+}
+
+.tem-app .leaflet-control-zoom a {
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+  font-size: 18px !important;
+  font-weight: 500 !important;
+  color: #1a1410 !important;
+  background: #fff !important;
+  border: none !important;
+  border-bottom: 1px solid #ece7dc !important;
+}
+
+.tem-app .leaflet-control-zoom a:hover {
+  background: #f7f4ed !important;
+  color: #1a1410 !important;
+}
+
+.tem-app .leaflet-control-zoom a:last-child {
+  border-bottom: none !important;
+}
+
+.tem-app .leaflet-control-zoom-in {
+  border-radius: 12px 12px 0 0 !important;
+}
+
+.tem-app .leaflet-control-zoom-out {
+  border-radius: 0 0 12px 12px !important;
 }
 
 @layer components {
@@ -108,17 +200,20 @@
   }
 }
 
-.featured-marquee-outer {
-  overflow: hidden;
+.featured-events-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d1ce transparent;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .featured-marquee-track {
-    animation: none !important;
-  }
+.featured-events-scroll::-webkit-scrollbar {
+  height: 6px;
+}
 
-  .featured-marquee-outer {
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
+.featured-events-scroll::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: #d1d1ce;
+}
+
+.featured-events-scroll::-webkit-scrollbar-track {
+  background: transparent;
 }

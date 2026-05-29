@@ -1,11 +1,12 @@
 import { memo, useEffect, useMemo, useRef } from 'react'
 import type { MutableRefObject } from 'react'
 import type { Layer, Marker as LeafletMarker } from 'leaflet'
-import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
+import { MapContainer, Marker, Popup, TileLayer, ZoomControl, useMap } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import { MAP_CONFIG } from '../../config/map'
 import type { TechEvent } from '../../types/event'
-import { formatEventDateDisplay } from '../../utils/formatEventDate'
+import { createEventClusterIcon } from '../../utils/mapClusterIcon'
+import { MapEventPopup } from './MapEventPopup'
 
 interface EventsMapProps {
   events: TechEvent[]
@@ -86,7 +87,6 @@ const ActiveEventController = ({
     map.on('moveend', onMoveEnd)
     map.flyTo(activeEvent.coordinates, MAP_CONFIG.focusedZoom, { duration: 0.6 })
 
-    // If the map does not move (already centered), moveend may not fire.
     const fallbackTimer = window.setTimeout(() => {
       map.off('moveend', onMoveEnd)
       revealPopup()
@@ -111,13 +111,25 @@ const EventsMapComponent = ({ events, activeEventId, center }: EventsMapProps) =
     [mapEvents, activeEventId],
   )
 
+  const { tileLayer } = MAP_CONFIG
+
   return (
-    <div className="h-full w-full">
-      <MapContainer center={center} zoom={MAP_CONFIG.defaultZoom} scrollWheelZoom className="z-0 h-full w-full">
+    <div className="tem-map h-full w-full">
+      <MapContainer
+        center={center}
+        zoom={MAP_CONFIG.defaultZoom}
+        scrollWheelZoom
+        zoomControl={false}
+        className="h-full w-full"
+      >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution={tileLayer.attribution}
+          url={tileLayer.url}
+          subdomains={tileLayer.subdomains}
+          maxZoom={tileLayer.maxZoom}
         />
+
+        <ZoomControl position="topright" />
 
         {activeEvent && activeEventId ? (
           <ActiveEventController
@@ -130,6 +142,7 @@ const EventsMapComponent = ({ events, activeEventId, center }: EventsMapProps) =
 
         <MarkerClusterGroup
           chunkedLoading
+          iconCreateFunction={createEventClusterIcon}
           ref={(group: MarkerClusterGroupLayer | null) => {
             clusterGroupRef.current = group
           }}
@@ -143,24 +156,7 @@ const EventsMapComponent = ({ events, activeEventId, center }: EventsMapProps) =
               }}
             >
               <Popup>
-                <div className="max-w-60 font-sans">
-                  <h3 className="font-display text-sm font-semibold text-ink">{event.title}</h3>
-                  <p className="mt-1 text-xs text-ink-muted">
-                    {formatEventDateDisplay(event.dateTime)}
-                  </p>
-                  <p className="text-xs text-ink-subtle">
-                    {event.venue}, {event.city}
-                  </p>
-                  <p className="mt-2 text-xs leading-relaxed text-ink-muted">{event.description}</p>
-                  <a
-                    className="mt-2 inline-block text-xs font-semibold text-ink underline decoration-warm-border underline-offset-2 hover:opacity-80"
-                    href={event.externalUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Open event details
-                  </a>
-                </div>
+                <MapEventPopup event={event} />
               </Popup>
             </Marker>
           ))}

@@ -103,7 +103,7 @@ function App() {
 
       {hasFeatured ? (
         <Suspense fallback={null}>
-          <FeaturedEventsCarousel events={featuredEvents} onEventClick={handleFlyTo} />
+          <FeaturedEventsCarousel events={featuredEvents} onFlyTo={handleFlyTo} />
         </Suspense>
       ) : null}
     </main>
