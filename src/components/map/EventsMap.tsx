@@ -1,5 +1,6 @@
 import { memo, useEffect, useMemo, useRef } from 'react'
-import type { Marker as LeafletMarker } from 'leaflet'
+import type { MutableRefObject } from 'react'
+import type { Layer, Marker as LeafletMarker } from 'leaflet'
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import { MAP_CONFIG } from '../../config/map'
@@ -12,6 +13,11 @@ interface EventsMapProps {
   center: [number, number]
 }
 
+interface MarkerClusterGroupLayer extends Layer {
+  hasLayer: (layer: Layer) => boolean
+  zoomToShowLayer: (layer: Layer, callback?: () => void) => void
+}
+
 const hasValidMapCoordinates = (event: TechEvent): boolean => {
   const c = event.coordinates
   return (
@@ -22,37 +28,112 @@ const hasValidMapCoordinates = (event: TechEvent): boolean => {
   )
 }
 
+const openMarkerPopup = (
+  marker: LeafletMarker | null | undefined,
+  clusterGroup: MarkerClusterGroupLayer | null,
+) => {
+  if (!marker) {
+    return
+  }
+
+  if (clusterGroup && clusterGroup.hasLayer(marker)) {
+    clusterGroup.zoomToShowLayer(marker, () => {
+      marker.openPopup()
+    })
+    return
+  }
+
+  marker.openPopup()
+}
+
+interface ActiveEventControllerProps {
+  activeEvent: TechEvent | null
+  activeEventId: string | null
+  markerRefs: MutableRefObject<Record<string, LeafletMarker | null>>
+  clusterGroupRef: MutableRefObject<MarkerClusterGroupLayer | null>
+}
+
+const ActiveEventController = ({
+  activeEvent,
+  activeEventId,
+  markerRefs,
+  clusterGroupRef,
+}: ActiveEventControllerProps) => {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!activeEventId || !activeEvent) {
+      return
+    }
+
+    const marker = markerRefs.current[activeEventId]
+    const clusterGroup = clusterGroupRef.current
+
+    let cancelled = false
+
+    const revealPopup = () => {
+      if (cancelled) {
+        return
+      }
+      openMarkerPopup(marker, clusterGroup)
+    }
+
+    const onMoveEnd = () => {
+      map.off('moveend', onMoveEnd)
+      revealPopup()
+    }
+
+    map.on('moveend', onMoveEnd)
+    map.flyTo(activeEvent.coordinates, MAP_CONFIG.focusedZoom, { duration: 0.6 })
+
+    // If the map does not move (already centered), moveend may not fire.
+    const fallbackTimer = window.setTimeout(() => {
+      map.off('moveend', onMoveEnd)
+      revealPopup()
+    }, 700)
+
+    return () => {
+      cancelled = true
+      map.off('moveend', onMoveEnd)
+      window.clearTimeout(fallbackTimer)
+    }
+  }, [activeEvent, activeEventId, clusterGroupRef, map, markerRefs])
+
+  return null
+}
+
 const EventsMapComponent = ({ events, activeEventId, center }: EventsMapProps) => {
   const mapEvents = useMemo(() => events.filter(hasValidMapCoordinates), [events])
   const markerRefs = useRef<Record<string, LeafletMarker | null>>({})
+  const clusterGroupRef = useRef<MarkerClusterGroupLayer | null>(null)
   const activeEvent = useMemo(
     () => mapEvents.find((event) => event.id === activeEventId) ?? null,
     [mapEvents, activeEventId],
   )
 
-  useEffect(() => {
-    if (!activeEventId) {
-      return
-    }
-    markerRefs.current[activeEventId]?.openPopup()
-  }, [activeEventId])
-
   return (
-    <div className="h-[420px] overflow-hidden rounded-2xl border border-indigo-100/90 bg-white/50 shadow-card ring-1 ring-indigo-100/40 transition duration-300 lg:h-full">
-      <MapContainer center={center} zoom={MAP_CONFIG.defaultZoom} scrollWheelZoom className="z-0">
+    <div className="h-full w-full">
+      <MapContainer center={center} zoom={MAP_CONFIG.defaultZoom} scrollWheelZoom className="z-0 h-full w-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {activeEvent && (
-          <MapFocuser
-            coordinates={activeEvent.coordinates}
-            key={`${activeEvent.id}-${activeEvent.coordinates[0]}-${activeEvent.coordinates[1]}`}
+        {activeEvent && activeEventId ? (
+          <ActiveEventController
+            activeEvent={activeEvent}
+            activeEventId={activeEventId}
+            markerRefs={markerRefs}
+            clusterGroupRef={clusterGroupRef}
           />
-        )}
+        ) : null}
 
-        <MarkerClusterGroup chunkedLoading>
+        <MarkerClusterGroup
+          chunkedLoading
+          ref={(group: MarkerClusterGroupLayer | null) => {
+            clusterGroupRef.current = group
+          }}
+        >
           {mapEvents.map((event) => (
             <Marker
               key={event.id}
@@ -62,17 +143,17 @@ const EventsMapComponent = ({ events, activeEventId, center }: EventsMapProps) =
               }}
             >
               <Popup>
-                <div className="max-w-60">
-                  <h3 className="text-sm font-semibold text-slate-900">{event.title}</h3>
-                  <p className="mt-1 text-xs text-indigo-700/90">
+                <div className="max-w-60 font-sans">
+                  <h3 className="font-display text-sm font-semibold text-ink">{event.title}</h3>
+                  <p className="mt-1 text-xs text-ink-muted">
                     {formatEventDateDisplay(event.dateTime)}
                   </p>
-                  <p className="text-xs text-slate-600">
+                  <p className="text-xs text-ink-subtle">
                     {event.venue}, {event.city}
                   </p>
-                  <p className="mt-2 text-xs text-slate-700">{event.description}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-ink-muted">{event.description}</p>
                   <a
-                    className="mt-2 inline-block text-xs font-semibold text-violet-600 underline decoration-violet-300 underline-offset-2 hover:text-indigo-700"
+                    className="mt-2 inline-block text-xs font-semibold text-ink underline decoration-warm-border underline-offset-2 hover:opacity-80"
                     href={event.externalUrl}
                     target="_blank"
                     rel="noreferrer"
@@ -87,20 +168,6 @@ const EventsMapComponent = ({ events, activeEventId, center }: EventsMapProps) =
       </MapContainer>
     </div>
   )
-}
-
-interface MapFocuserProps {
-  coordinates: [number, number]
-}
-
-const MapFocuser = ({ coordinates }: MapFocuserProps) => {
-  const map = useMap()
-
-  useEffect(() => {
-    map.flyTo(coordinates, MAP_CONFIG.focusedZoom, { duration: 0.6 })
-  }, [coordinates, map])
-
-  return null
 }
 
 export const EventsMap = memo(EventsMapComponent)

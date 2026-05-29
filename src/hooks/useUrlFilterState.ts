@@ -9,14 +9,16 @@ const isValidCategory = (value: string | null): value is EventCategory =>
 interface UrlFilterStateParams {
   searchQuery: string
   categoryFilter: EventCategory | 'All'
+  countryFilter: string | 'All'
   hasHydratedFromUrl: boolean
-  setFiltersFromUrl: (query: string, category: EventCategory | 'All') => void
+  setFiltersFromUrl: (query: string, category: EventCategory | 'All', country: string | 'All') => void
   markUrlHydrated: () => void
 }
 
 export const useUrlFilterState = ({
   searchQuery,
   categoryFilter,
+  countryFilter,
   hasHydratedFromUrl,
   setFiltersFromUrl,
   markUrlHydrated,
@@ -30,8 +32,10 @@ export const useUrlFilterState = ({
     const initialSearch = params.get('q') ?? ''
     const rawCategory = params.get('category')
     const initialCategory = isValidCategory(rawCategory) ? rawCategory : 'All'
+    const rawCountry = params.get('country')
+    const initialCountry = rawCountry?.trim() ? rawCountry.trim() : 'All'
 
-    setFiltersFromUrl(initialSearch, initialCategory)
+    setFiltersFromUrl(initialSearch, initialCategory, initialCountry)
     markUrlHydrated()
   }, [hasHydratedFromUrl, markUrlHydrated, setFiltersFromUrl])
 
@@ -53,7 +57,13 @@ export const useUrlFilterState = ({
       params.delete('category')
     }
 
+    if (countryFilter !== 'All') {
+      params.set('country', countryFilter)
+    } else {
+      params.delete('country')
+    }
+
     const nextUrl = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`
     window.history.replaceState({}, '', nextUrl)
-  }, [searchQuery, categoryFilter, hasHydratedFromUrl])
+  }, [searchQuery, categoryFilter, countryFilter, hasHydratedFromUrl])
 }

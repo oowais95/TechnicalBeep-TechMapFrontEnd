@@ -1,5 +1,7 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
+import { Button } from '../../components/ui/Button'
+import { Panel } from '../../components/ui/Panel'
 
 export const AdminLayout = () => {
   const { logout } = useAuth()
@@ -11,29 +13,27 @@ export const AdminLayout = () => {
   }
 
   return (
-    <main className="tem-app min-h-screen bg-slate-100">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3">
-          <div>
-            <p className="text-xs uppercase tracking-wider text-slate-500">Admin Panel</p>
-            <h1 className="text-lg font-semibold text-slate-900">Event Management</h1>
+    <main className="min-h-screen bg-background">
+      <header className="sticky top-0 z-20 border-b border-warm-border bg-white/90 backdrop-blur-md">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 lg:px-6">
+          <div className="min-w-0">
+            <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-ink-subtle">Admin</p>
+            <h1 className="font-display truncate text-lg font-semibold text-ink">Event Management</h1>
           </div>
-          <div className="flex items-center gap-3">
-            <Link className="text-sm font-medium text-slate-600 hover:text-slate-900" to="/">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link className="tem-subtle-button" to="/">
               View Public App
             </Link>
-            <button
-              className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:opacity-90"
-              onClick={handleLogout}
-              type="button"
-            >
+            <Button className="px-3 py-2" onClick={handleLogout} type="button">
               Logout
-            </button>
+            </Button>
           </div>
         </div>
       </header>
       <div className="mx-auto w-full max-w-6xl p-4 lg:p-6">
-        <Outlet />
+        <Panel className="p-3 sm:p-4">
+          <Outlet />
+        </Panel>
       </div>
     </main>
   )

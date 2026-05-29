@@ -4,6 +4,8 @@ import type { EventPayload } from '../../services/eventsService.js'
 import { createEvent, getEvents, updateEvent } from '../../services/eventsService.js'
 import type { TechEvent } from '../../types/event'
 import { EventForm } from '../components/EventForm'
+import { Button } from '../../components/ui/Button'
+import { StateNotice } from '../../components/ui/StateNotice'
 
 export const EventFormPage = () => {
   const navigate = useNavigate()
@@ -57,30 +59,26 @@ export const EventFormPage = () => {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-rose-200 bg-white p-6 text-center shadow-card">
-        <p className="text-sm text-rose-600">{error}</p>
-        <button
-          className="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
-          onClick={() => void loadEvent()}
-          type="button"
-        >
-          Retry
-        </button>
-      </div>
+      <StateNotice
+        tone="error"
+        title="Could not open event"
+        message={error}
+        action={
+          <Button onClick={() => void loadEvent()} type="button">
+            Retry
+          </Button>
+        }
+      />
     )
   }
 
   if (isLoading) {
-    return <div className="rounded-xl bg-white p-6 shadow-card">Loading event...</div>
+    return <div className="tem-panel p-4 text-sm text-ink-muted">Loading event...</div>
   }
 
   return (
     <section className="space-y-4">
-      <button
-        className="text-sm font-medium text-slate-600 hover:text-slate-900"
-        onClick={() => navigate('/admin')}
-        type="button"
-      >
+      <button className="tem-subtle-button" onClick={() => navigate('/admin')} type="button">
         ← Back to dashboard
       </button>
       <EventForm initialEvent={initialEvent} isSaving={isSaving} onSubmit={handleSubmit} />

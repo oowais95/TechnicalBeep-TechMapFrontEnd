@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { FiltersBar } from './components/FiltersBar'
+import { AppHeader } from './components/AppHeader'
 import { LoadingSkeleton } from './components/LoadingSkeleton'
 import { ErrorState } from './components/ErrorState'
 import { MAP_CONFIG } from './config/map'
@@ -23,29 +23,39 @@ function App() {
   const {
     searchQuery,
     categoryFilter,
+    countryFilter,
     selectedEventId,
     hasHydratedFromUrl,
     setSearchQuery,
     setCategoryFilter,
+    setCountryFilter,
     setFiltersFromUrl,
     markUrlHydrated,
     setSelectedEventId,
   } = useEventStore()
-  const { events, featuredEvents, isLoading, error, refetch } = useEventsData({
+  const { events, featuredEvents, availableCountries, isLoading, error, refetch } = useEventsData({
     searchQuery,
     categoryFilter,
+    countryFilter,
   })
 
   useUrlFilterState({
     searchQuery,
     categoryFilter,
+    countryFilter,
     hasHydratedFromUrl,
     setFiltersFromUrl,
     markUrlHydrated,
   })
 
+  const handleFlyTo = (eventId: string) => {
+    setSelectedEventId(eventId)
+  }
+
+  const hasFeatured = featuredEvents.length > 0
+
   if (isLoading) {
-    return <LoadingSkeleton />
+    return <LoadingSkeleton hasFeatured={false} />
   }
 
   if (error) {
@@ -53,63 +63,49 @@ function App() {
   }
 
   return (
-    <main className="tem-app mx-auto flex min-h-screen w-full max-w-[1600px] flex-col gap-4 p-4 lg:gap-5 lg:p-6">
-      <header className="tem-surface relative overflow-hidden rounded-3xl p-5 sm:p-6">
-        <div
-          className="pointer-events-none absolute -right-20 -top-20 h-44 w-44 rounded-full bg-indigo-500/20 blur-3xl"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-fuchsia-400/15 blur-3xl"
-          aria-hidden
-        />
-        <p className="relative text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700/90">
-          Live discovery
-        </p>
-        <h1 className="relative mt-1 bg-gradient-to-r from-slate-900 via-indigo-700 to-violet-700 bg-clip-text text-2xl font-bold tracking-tight text-transparent sm:text-3xl">
-          Tech Events Map
-        </h1>
-        <p className="relative mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
-          Discover upcoming tech events and instantly navigate their locations on an interactive map.
-        </p>
-      </header>
+    <main className="tem-app">
+      <AppHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+
+      <div
+        className="absolute right-0 z-0 left-0 sm:left-[380px]"
+        style={{
+          top: 'var(--app-header-height)',
+          bottom: hasFeatured ? 'var(--featured-bar-height)' : 0,
+        }}
+      >
+        <Suspense fallback={<div className="h-full w-full animate-pulse bg-[#e8e4dc]" />}>
+          <EventsMap events={events} activeEventId={selectedEventId} center={center} />
+        </Suspense>
+      </div>
 
       <Suspense
         fallback={
-          <div className="tem-surface h-36 animate-pulse rounded-3xl bg-gradient-to-r from-white/80 via-indigo-50/80 to-fuchsia-50/70" />
+          <div
+            className="fixed left-0 z-20 w-full max-w-[380px] animate-pulse border-r border-warm-border bg-white/90"
+            style={{ top: 'var(--app-header-height)', bottom: hasFeatured ? 'var(--featured-bar-height)' : 0 }}
+          />
         }
       >
-        <FeaturedEventsCarousel events={featuredEvents} onEventClick={setSelectedEventId} />
+        <EventSidebar
+          events={events}
+          activeEventId={selectedEventId}
+          categories={categories}
+          countries={availableCountries}
+          selectedCategory={categoryFilter}
+          selectedCountry={countryFilter}
+          onCategoryChange={setCategoryFilter}
+          onCountryChange={setCountryFilter}
+          onEventSelect={setSelectedEventId}
+          onFlyTo={handleFlyTo}
+          reserveBottomForFeatured={hasFeatured}
+        />
       </Suspense>
 
-      <FiltersBar
-        searchQuery={searchQuery}
-        selectedCategory={categoryFilter}
-        categories={categories}
-        onSearchChange={setSearchQuery}
-        onCategoryChange={setCategoryFilter}
-      />
-
-      <section className="grid flex-1 gap-4 lg:grid-cols-[1.7fr_1fr]">
-        <Suspense
-          fallback={
-            <div className="tem-surface h-[420px] animate-pulse rounded-3xl bg-gradient-to-br from-white/80 to-indigo-50/70 lg:h-full" />
-          }
-        >
-          <EventsMap events={events} activeEventId={selectedEventId} center={center} />
+      {hasFeatured ? (
+        <Suspense fallback={null}>
+          <FeaturedEventsCarousel events={featuredEvents} onEventClick={handleFlyTo} />
         </Suspense>
-        <Suspense
-          fallback={
-            <div className="tem-surface h-[420px] animate-pulse rounded-3xl bg-gradient-to-br from-white/75 to-violet-50/80 lg:h-full" />
-          }
-        >
-          <EventSidebar
-            events={events}
-            activeEventId={selectedEventId}
-            onEventSelect={setSelectedEventId}
-          />
-        </Suspense>
-      </section>
+      ) : null}
     </main>
   )
 }

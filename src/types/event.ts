@@ -7,6 +7,8 @@ export interface TechEvent {
   dateTime: string
   venue: string
   city: string
+  /** Optional; when absent, country is inferred from city for filtering. */
+  country?: string
   coordinates: [number, number]
   description: string
   externalUrl: string

@@ -1,11 +1,37 @@
-export const LoadingSkeleton = () => (
-  <main className="tem-app mx-auto flex min-h-screen w-full max-w-[1600px] flex-col gap-4 p-4 lg:gap-5 lg:p-6">
-    <div className="tem-surface h-20 animate-pulse rounded-3xl bg-gradient-to-r from-white/80 via-indigo-50/70 to-fuchsia-50/70" />
-    <div className="tem-surface h-40 animate-pulse rounded-3xl bg-gradient-to-r from-white/80 to-indigo-50/75" />
-    <div className="tem-surface h-28 animate-pulse rounded-3xl bg-gradient-to-r from-violet-50/70 to-white/75" />
-    <section className="grid flex-1 gap-4 lg:grid-cols-[1.7fr_1fr]">
-      <div className="tem-surface h-[420px] animate-pulse rounded-3xl bg-gradient-to-br from-white/75 to-indigo-50/70 lg:h-full" />
-      <div className="tem-surface h-[420px] animate-pulse rounded-3xl bg-gradient-to-br from-white/75 to-violet-50/70 lg:h-full" />
-    </section>
+interface LoadingSkeletonProps {
+  hasFeatured?: boolean
+}
+
+export const LoadingSkeleton = ({ hasFeatured = false }: LoadingSkeletonProps) => (
+  <main className="tem-app">
+    <div
+      className="fixed inset-x-0 top-0 z-30 animate-pulse border-b border-warm-border bg-white/90"
+      style={{ height: 'var(--app-header-height)' }}
+    />
+
+    <div
+      className="absolute animate-pulse bg-[#e8e4dc]"
+      style={{
+        top: 'var(--app-header-height)',
+        left: 0,
+        right: 0,
+        bottom: hasFeatured ? 'var(--featured-bar-height)' : 0,
+      }}
+    />
+
+    <div
+      className="fixed left-0 z-20 w-full max-w-[380px] animate-pulse border-r border-warm-border bg-white/90"
+      style={{
+        top: 'var(--app-header-height)',
+        bottom: hasFeatured ? 'var(--featured-bar-height)' : 0,
+      }}
+    />
+
+    {hasFeatured ? (
+      <div
+        className="fixed inset-x-0 bottom-0 z-30 animate-pulse border-t border-warm-border bg-cream-dark/80"
+        style={{ height: 'var(--featured-bar-height)' }}
+      />
+    ) : null}
   </main>
 )

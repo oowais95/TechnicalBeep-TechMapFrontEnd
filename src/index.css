@@ -2,31 +2,109 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --background: 38 30% 96%;
+    --foreground: 30 18% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 30 18% 14%;
+    --primary: 30 18% 14%;
+    --primary-foreground: 38 30% 96%;
+    --secondary: 38 20% 92%;
+    --secondary-foreground: 30 18% 14%;
+    --muted: 38 20% 92%;
+    --muted-foreground: 30 12% 42%;
+    --accent: 38 20% 92%;
+    --accent-foreground: 30 18% 14%;
+    --border: 30 15% 82%;
+    --input: 30 15% 82%;
+    --ring: 30 18% 14%;
+    --radius: 0.5rem;
+    --app-header-height: 3.5rem;
+    --featured-bar-height: 6.75rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body {
+    @apply m-0 h-full w-full overflow-x-hidden;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  #root {
+    @apply h-full min-h-screen;
+  }
+}
+
 .tem-app {
-  @apply min-h-screen text-slate-900 antialiased;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.14) 0%, transparent 40%),
-    radial-gradient(circle at 100% 15%, rgba(217, 70, 239, 0.11) 0%, transparent 35%),
-    radial-gradient(circle at 15% 100%, rgba(45, 212, 191, 0.09) 0%, transparent 38%),
-    linear-gradient(165deg, #f8fafc 0%, #eef2ff 46%, #f5f3ff 74%, #faf5ff 100%);
+  @apply relative h-screen w-full overflow-x-hidden overflow-y-hidden bg-background text-foreground;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
 }
 
 .tem-app .leaflet-container {
   @apply h-full w-full;
+  background: #e8e4dc;
+}
+
+.tem-app .leaflet-popup-content-wrapper {
+  @apply rounded-xl border border-warm-border bg-white shadow-card;
+}
+
+.tem-app .leaflet-popup-tip {
+  @apply bg-white;
 }
 
 @layer components {
   .input {
-    @apply w-full rounded-xl border border-white/70 bg-white/75 px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-1 ring-indigo-100/60 backdrop-blur-sm transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200;
+    @apply w-full rounded-full border border-warm-border bg-white px-4 py-2.5 text-sm text-ink outline-none transition placeholder:text-ink-subtle focus:border-ink/30 focus:ring-2 focus:ring-ink/10;
+    box-shadow: 0 1px 2px rgba(26, 20, 16, 0.04), 0 4px 12px rgba(26, 20, 16, 0.03);
   }
 
   .tem-surface {
-    @apply border border-white/70 bg-white/80 shadow-card backdrop-blur-md;
+    @apply rounded-2xl border border-warm-border bg-white/95 shadow-float backdrop-blur-md;
   }
 
   .tem-subtle-button {
-    @apply rounded-xl border border-indigo-100/90 bg-white/70 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50/50 hover:text-indigo-700;
+    @apply inline-flex items-center justify-center rounded-xl border border-warm-border bg-white px-3.5 py-2 text-sm font-medium text-ink-muted transition hover:border-ink/20 hover:bg-cream hover:text-ink;
+  }
+
+  .tem-panel {
+    @apply rounded-2xl border border-warm-border bg-white shadow-panel;
+  }
+
+  .tem-floating-panel {
+    @apply rounded-2xl border border-warm-border bg-white shadow-panel backdrop-blur-md;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-cream transition hover:bg-ink/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl border border-warm-border bg-white px-4 py-2.5 text-sm font-semibold text-ink-muted transition hover:bg-cream hover:text-ink active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .state-card {
+    @apply tem-panel p-5 text-center sm:p-6;
+  }
+
+  .filter-chip {
+    @apply inline-flex shrink-0 items-center rounded-full border border-warm-border bg-white px-3.5 py-2 text-xs font-semibold text-ink-muted shadow-sm transition hover:border-ink/20 hover:bg-cream;
+  }
+
+  .filter-chip-active {
+    @apply border-ink bg-ink text-cream shadow-sm;
+  }
+
+  .font-display {
+    font-family: Fraunces, Georgia, serif;
   }
 }
 

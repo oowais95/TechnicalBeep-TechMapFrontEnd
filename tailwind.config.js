@@ -4,22 +4,53 @@ export default {
   theme: {
     extend: {
       colors: {
-        surface: '#0f172a',
-        panel: '#111827',
-        brand: {
-          50: '#f5f3ff',
-          100: '#ede9fe',
-          200: '#ddd6fe',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#8b5cf6',
-          600: '#7c3aed',
-          700: '#6d28d9',
+        background: 'hsl(var(--background) / <alpha-value>)',
+        foreground: 'hsl(var(--foreground) / <alpha-value>)',
+        card: {
+          DEFAULT: 'hsl(var(--card) / <alpha-value>)',
+          foreground: 'hsl(var(--card-foreground) / <alpha-value>)',
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted) / <alpha-value>)',
+          foreground: 'hsl(var(--muted-foreground) / <alpha-value>)',
+        },
+        border: 'hsl(var(--border) / <alpha-value>)',
+        primary: {
+          DEFAULT: 'hsl(var(--primary) / <alpha-value>)',
+          foreground: 'hsl(var(--primary-foreground) / <alpha-value>)',
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent) / <alpha-value>)',
+          foreground: 'hsl(var(--accent-foreground) / <alpha-value>)',
+        },
+        ink: {
+          DEFAULT: '#1a1410',
+          muted: '#6b6259',
+          subtle: '#a39b8f',
+        },
+        cream: {
+          DEFAULT: '#f7f4ed',
+          dark: '#2a2520',
+          darker: '#322b25',
+        },
+        warm: {
+          border: '#e5dfd3',
+          line: '#ece7dc',
         },
       },
+      fontFamily: {
+        sans: ['"DM Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Fraunces', 'Georgia', 'serif'],
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
+        xl: 'calc(var(--radius) + 4px)',
+        '2xl': 'calc(var(--radius) + 8px)',
+      },
       boxShadow: {
-        card: '0 8px 30px rgba(79, 70, 229, 0.08), 0 2px 8px rgba(15, 23, 42, 0.04)',
-        glow: '0 0 40px rgba(139, 92, 246, 0.15)',
+        card: '0 1px 2px rgba(26, 20, 16, 0.04), 0 4px 12px rgba(26, 20, 16, 0.06)',
+        float: '0 8px 32px rgba(26, 20, 16, 0.08), 0 2px 8px rgba(26, 20, 16, 0.04)',
+        panel: '0 12px 40px rgba(26, 20, 16, 0.1), 0 2px 8px rgba(26, 20, 16, 0.05)',
       },
       keyframes: {
         'featured-marquee': {
@@ -34,4 +65,3 @@ export default {
   },
   plugins: [],
 }
-

@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ENV } from '../config/env'
 import { getEvents, getFeaturedEvents } from '../services/eventsService.js'
 import { filterEvents, isUpcomingPublishedMapEvent } from '../utils/eventFilters'
+import { getUniqueCountries } from '../utils/eventCountry'
 import type { EventCategory, TechEvent } from '../types/event'
 
 interface EventsDataState {
   events: TechEvent[]
   featuredEvents: TechEvent[]
+  availableCountries: string[]
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>
@@ -15,13 +17,25 @@ interface EventsDataState {
 interface UseEventsDataParams {
   searchQuery: string
   categoryFilter: EventCategory | 'All'
+  countryFilter: string | 'All'
 }
 
-export const useEventsData = ({ searchQuery, categoryFilter }: UseEventsDataParams): EventsDataState => {
-  const [events, setEvents] = useState<TechEvent[]>([])
+export const useEventsData = ({
+  searchQuery,
+  categoryFilter,
+  countryFilter,
+}: UseEventsDataParams): EventsDataState => {
+  const [rawEvents, setRawEvents] = useState<TechEvent[]>([])
   const [featuredEvents, setFeaturedEvents] = useState<TechEvent[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const events = useMemo(
+    () => filterEvents(rawEvents, searchQuery, categoryFilter, countryFilter),
+    [rawEvents, searchQuery, categoryFilter, countryFilter],
+  )
+
+  const availableCountries = useMemo(() => getUniqueCountries(rawEvents), [rawEvents])
 
   const refetch = useCallback(async () => {
     setIsLoading(true)
@@ -33,13 +47,13 @@ export const useEventsData = ({ searchQuery, categoryFilter }: UseEventsDataPara
           getEvents({ search: searchQuery, category: categoryFilter }),
           getFeaturedEvents(),
         ])
-        setEvents(eventsPayload as TechEvent[])
+        setRawEvents(eventsPayload as TechEvent[])
         setFeaturedEvents(featuredPayload as TechEvent[])
       } else {
-        const raw = (await getEvents({ search: searchQuery, category: categoryFilter })) as TechEvent[]
-        const featuredPayload = raw.filter((e) => e.featured && isUpcomingPublishedMapEvent(e))
-        const eventsPayload = filterEvents(raw, searchQuery, categoryFilter)
-        setEvents(eventsPayload)
+        const fetched = (await getEvents({ search: searchQuery, category: categoryFilter })) as TechEvent[]
+        const featuredPayload = fetched.filter((e) => e.featured && isUpcomingPublishedMapEvent(e))
+        const eventsPayload = filterEvents(fetched, searchQuery, categoryFilter, 'All')
+        setRawEvents(eventsPayload)
         setFeaturedEvents(featuredPayload)
       }
     } catch (unknownError) {
@@ -48,7 +62,7 @@ export const useEventsData = ({ searchQuery, categoryFilter }: UseEventsDataPara
           ? unknownError.message
           : 'Something went wrong while fetching events.'
       setError(message)
-      setEvents([])
+      setRawEvents([])
       setFeaturedEvents([])
     } finally {
       setIsLoading(false)
@@ -78,5 +92,5 @@ export const useEventsData = ({ searchQuery, categoryFilter }: UseEventsDataPara
     return () => window.removeEventListener('storage', onStorage)
   }, [refetch])
 
-  return { events, featuredEvents, isLoading, error, refetch }
+  return { events, featuredEvents, availableCountries, isLoading, error, refetch }
 }
